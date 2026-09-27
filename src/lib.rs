@@ -84,9 +84,10 @@ impl Guard for Bulkhead {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use resilience::{Failure, Guarded, execute};
+    use resilience::{Guarded, execute};
     use std::cell::Cell;
     use std::time::Duration;
+    use xcore::Failure;
 
     fn failed() -> Attempt {
         Attempt {
@@ -191,7 +192,7 @@ mod tests {
 
         fn after(&self, attempt: &Attempt) -> Decision {
             match &attempt.failure {
-                Some(failure) if failure.is_retryable() && attempt.number < self.0 => {
+                Some(failure) if failure.retryable && attempt.number < self.0 => {
                     Decision::Wait(Duration::ZERO)
                 }
                 _ => Decision::Proceed,
