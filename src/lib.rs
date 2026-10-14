@@ -59,7 +59,7 @@ impl Guard for Bulkhead {
     fn before(&self, _: u32) -> Decision {
         let taken = self
             .in_flight
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |current| {
+            .try_update(Ordering::SeqCst, Ordering::SeqCst, |current| {
                 (current < self.max_concurrent).then_some(current + 1)
             });
         match taken {
@@ -74,7 +74,7 @@ impl Guard for Bulkhead {
     fn after(&self, _: &Attempt) -> Decision {
         let _ = self
             .in_flight
-            .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |current| {
+            .try_update(Ordering::SeqCst, Ordering::SeqCst, |current| {
                 current.checked_sub(1)
             });
         Decision::Proceed
